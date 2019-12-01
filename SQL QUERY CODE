@@ -92,9 +92,28 @@ WHAT IS MONTHLY AVERAGE CRIME IN WESTMINSTER?
 		GROUP BY borough, month
 		ORDER BY average_crime DESC;
 		
-from the query we can conclude that the police should tighten the security at december.
+from the query we can conclude that the police should tighten the security at westminster when december comes
 the crime number may be risen because of christmas. 
 
 
+WHAT IS THE MONTH WHICH HAD THE HIGHEST AVERAGE CRIME NUMBER FOR EACH BOROUGH ???
+		
+		SELECT borough, month, avg_crime
+		FROM (
+		  SELECT borough, month, AVG(value) as avg_crime, RANK() OVER(PARTITION BY borough ORDER BY AVG(value) DESC) as crime_rank
+		  FROM `bigquery-public-data.london_crime.crime_by_lsoa`
+		  GROUP BY borough, month)
+		WHERE crime_rank = 1
+		ORDER BY month;
  
+ from the query result we can conclude that, the police should focused the security in 
+ 1. Barking and Dagenham, Bexley, Enfield, Harrow, Havering, and Sutton at March; 
+ 2. Camden, Hammersmith and Fulham, and Richmond upon Thames at May; 
+ 3. Hackney and Waltham Forest at June; 
+ 4. Bromley, Croydon, Ealing, Greenwich, Haringey, Lambeth, Lewisham, Merton, Southwark, Tower Hamslet, and Wandsworth at July;
+ 5. Kensington and Chelsea at August;
+ 6. City of London at September;
+ 7. Brent, Hillingdon, Hounslow, Islington, Kingston Upon Thames, and Newham at October;
+ 8. Barnet, and Redbridge at November;
+ 9. Westminster at December
  
