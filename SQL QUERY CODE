@@ -1,0 +1,100 @@
+-- THIS IS MY NEW PROJECT
+-- THIS PROJECT USES BIGQUERY AS A TOOLS TO EXTRACT DATA
+-- DATA OBTAINED FROM BIGQUERY PUBLIC DATA = LONDON CRIME LSOA
+
+FINDING WHAT CRIME HAS THE HIGHEST NUMBER EACH YEAR at CITY OF LONDON
+
+first, select the data only for city of london borough and find the number of each crime per year
+		--total crime_per category_per year in city of london--
+		SELECT major_category, year,  SUM(value) AS total_crime_per_year
+		FROM `bigquery-public-data.london_crime.crime_by_lsoa`
+		WHERE borough = 'City of London'
+		GROUP BY year, major_category
+		ORDER BY year;
+		
+second, select maximum number of crime per year, and what crime it is
+
+		WITH dummy AS (
+		  SELECT major_category, year, MAX(total_crime_per_year) AS total_crime, RANK () OVER(PARTITION BY year ORDER BY MAX(total_crime_per_year) DESC) AS crime_ranks 
+		  FROM (
+			SELECT major_category, year,  SUM(value) AS total_crime_per_year
+			FROM `bigquery-public-data.london_crime.crime_by_lsoa`
+			WHERE borough = 'City of London'
+			GROUP BY year, major_category)
+		  GROUP BY major_category, year
+		  ORDER BY year)
+		  
+		SELECT major_category, year, total_crime
+		FROM DUMMY
+		WHERE crime_ranks = 1; 
+		
+from the table we can conclude that the majority of the crime occured in london city from 2008 until 2016 is theft and handling
+
+if we look further in the data, the number of crime occured in london city from 2008 until 2010 was 0. this indicated that either the data is not correctly inputed or there was no data for those period of year
+so we can conclude that the main crime of london city from 2011 until 2016 is Theft and Handling.
+
+
+FINDING WHEN WAS THE LOWEST CRIME AND THE HIGHEST CRIME OCCURED IN LONDON CITY
+
+to find the lowest and the highest crime number from 2011 until 2016 i use this query to rank the number of crime per year
+
+		SELECT year, total_crime_per_year AS crime_num
+		FROM (
+		  SELECT year, SUM(value) AS total_crime_per_year
+		  FROM `bigquery-public-data.london_crime.crime_by_lsoa`
+		  WHERE borough = 'City of London'
+		  GROUP BY year)
+		WHERE year NOT IN (2008, 2009, 2010)
+		ORDER BY crime_rank;
+		
+FINDING WHICH BOROUGH IS THE SAFER
+
+		SELECT borough, SUM(value) AS total_crime
+		FROM `bigquery-public-data.london_crime.crime_by_lsoa`
+		GROUP BY borough
+		ORDER BY total_crime;
+
+from the query above we can conclude that city of london was the safer borough and westminster was the toughest borough
+
+WHAT IS THE AVERAGE CRIME NUMBER OCCURED PER YEAR FOR EACH BOROUGH
+
+		SELECT borough, year, AVG(value) AS average_crime
+		FROM `bigquery-public-data.london_crime.crime_by_lsoa`
+		GROUP BY year, borough
+		ORDER BY year ASC, average_crime DESC;
+
+based on the query result, westminster has the highest average crime per year. the number almost doubled camden crime number.
+this indicates that the police should more active in westminster.
+
+WHAT IS THE HIGHEST CRIME OCCURED IN WESTMINSTER EACH YEAR
+
+		WITH dummy AS (
+		  SELECT borough, year, major_category, MAX(crime_per_year) AS total_crime, RANK() OVER(PARTITION BY year ORDER BY max(crime_per_year) DESC) AS crime_ranks
+		  FROM (
+			SELECT borough, year, major_category, SUM(value) AS crime_per_year
+			FROM `bigquery-public-data.london_crime.crime_by_lsoa`
+			WHERE borough = 'Westminster'
+			GROUP BY year, major_category, borough)
+		  GROUP BY year, major_category, borough
+		  ORDER BY year)
+		  
+		SELECT *
+		FROM DUMMY
+		WHERE crime_ranks = 1;
+		
+theft and handling still the most crime in westminster. 
+
+WHAT IS MONTHLY AVERAGE CRIME IN WESTMINSTER?
+
+		SELECT borough, month, AVG(value) AS average_crime
+		FROM `bigquery-public-data.london_crime.crime_by_lsoa`
+		WHERE borough = 'Westminster'
+		GROUP BY borough, month
+		ORDER BY average_crime DESC;
+		
+from the query we can conclude that the police should tighten the security at december.
+the crime number may be risen because of christmas. 
+
+
+ 
+ 
